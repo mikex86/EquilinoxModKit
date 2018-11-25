@@ -1,0 +1,18 @@
+#152:167
+            final float targeti = reader.getNextLabelFloat();
+            return new Requirement() {
+               public boolean check(Entity entity) {
+                  LifeComponent lifeComp = (LifeComponent)entity.getComponent(ComponentType.LIFE);
+                  float amount = lifeComp.getEnvironmentalSatisfaction();
+                  return amount >= targeti;
+               }
+
+               public void getGuiInfo(List components) {
+                  components.add(new ReqInfo(EnvironmentComponentLoader.SATISFACTION, ">" + (int)(targeti * 100.0F) + "% "));
+               }
+
+               public boolean isSecret() {
+                  return false;
+               }
+            };
+#patchEnd

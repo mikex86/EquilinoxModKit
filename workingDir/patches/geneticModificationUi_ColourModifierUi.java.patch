@@ -1,0 +1,14 @@
+#91:102
+      for(int i = 0; i < array.length; ++i) {
+         final int x = i;
+         array[i] = new ComboBoxObject("X", new UiProvider() {
+            public GuiComponent createUi() {
+               Colour naturalCol = ColourModifierUi.this.naturalColours[x].colour;
+               float dis = Colour.sub(naturalCol, ColourModifierUi.this.traitManager.getTrait().getModifier(), (Colour)null).length();
+               int naturalPrice = ColourModifierUi.this.naturalColours[x].price;
+               int price = (int)(dis * (float)naturalPrice);
+               return new ColourMenuItem(ColourModifierUi.this.naturalColours[x].colour, price, ColourModifierUi.this.naturalColours[x].name);
+            }
+         });
+      }
+#patchEnd

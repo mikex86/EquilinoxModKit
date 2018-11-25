@@ -1,0 +1,226 @@
+#14:27
+   static class DynamicAdd extends Ticket {
+
+      private final DataUpdateTickets tickets;
+
+      DynamicAdd(DataUpdateTickets tickets, Entity relatedEntity) {
+         super(TicketType.DYNAMIC_ADD, relatedEntity);
+         this.tickets = tickets;
+      }
+
+      protected boolean carryOut() {
+         if (this.relatedEntity.getBlueprint().isLoaded()) {
+            tickets.updateManager.getDynamicBatch().addEntity(this.relatedEntity);
+            return true;
+         } else {
+            return false;
+         }
+      }
+   }
+#patchEnd
+
+#29:43
+   static class DynamicDefrag extends Ticket {
+
+      private final DataUpdateTickets tickets;
+
+      DynamicDefrag(DataUpdateTickets tickets) {
+         super(TicketType.DYNAMIC_DEFRAG, (Entity)null);
+         this.tickets = tickets;
+      }
+
+      protected boolean carryOut() {
+         boolean updateOccurred = this.tickets.updateManager.getDynamicBatch().defrag();
+         if (!updateOccurred) {
+            this.indicateNoVboUpdate();
+         }
+
+         this.tickets.addDynamicDefragTicket();
+         return true;
+      }
+   }
+#patchEnd
+
+#45:57
+   static class DynamicDelete extends Ticket {
+
+      private Blueprint blueprint;
+      private final DataUpdateTickets tickets;
+
+      DynamicDelete(DataUpdateTickets tickets, Blueprint blueprint) {
+         super(TicketType.DYNAMIC_DELETE, (Entity)null);
+         this.blueprint = blueprint;
+         this.tickets = tickets;
+      }
+
+      protected boolean carryOut() {
+         this.tickets.updateManager.getDynamicBatch().delete(this.blueprint);
+         return true;
+      }
+   }
+#patchEnd
+
+#59:73
+   static class DynamicSwitch extends Ticket {
+
+      private final DataUpdateTickets tickets;
+
+      DynamicSwitch(DataUpdateTickets tickets, Entity relatedEntity, int batchId) {
+         super(TicketType.SWITCH_TO_DYNAMIC, relatedEntity);
+         this.tickets = tickets;
+      }
+
+      protected boolean carryOut() {
+         if (this.relatedEntity.getBlueprint().isLoaded()) {
+            this.tickets.updateManager.getStaticBatch(this.relatedEntity.getBatchId()).removeEntity(this.relatedEntity);
+            this.tickets.updateManager.getDynamicBatch().addEntity(this.relatedEntity);
+            return true;
+         } else {
+            return false;
+         }
+      }
+   }
+#patchEnd
+
+#75:92
+   static class StaticAdd extends Ticket {
+
+      private final DataUpdateTickets tickets;
+      private int batchId;
+
+      StaticAdd(DataUpdateTickets tickets, Entity relatedEntity, int batchId, boolean urgent) {
+         super(urgent ? TicketType.STATIC_ADD_URGENT : TicketType.STATIC_ADD, relatedEntity);
+         this.batchId = batchId;
+         this.tickets = tickets;
+      }
+
+      protected boolean carryOut() {
+         if (this.relatedEntity.getBlueprint().isLoaded()) {
+            this.tickets.updateManager.getStaticBatch(this.batchId).addEntity(this.relatedEntity);
+            this.relatedEntity.setBatchId(this.batchId);
+            return true;
+         } else {
+            return false;
+         }
+      }
+   }
+#patchEnd
+
+#94:111
+   static class StaticDefrag extends Ticket {
+
+      private int batchId;
+      private final DataUpdateTickets tickets;
+
+      StaticDefrag(DataUpdateTickets tickets, int batchId) {
+         super(TicketType.STATIC_DEFRAG, (Entity)null);
+         this.batchId = batchId;
+         this.tickets = tickets;
+      }
+
+      protected boolean carryOut() {
+         boolean updateOccurred = this.tickets.updateManager.getStaticBatch(this.batchId).defrag();
+         if (!updateOccurred) {
+            this.indicateNoVboUpdate();
+         }
+
+         this.tickets.updateManager.addStaticDefragTicket(this.batchId);
+         return true;
+      }
+   }
+#patchEnd
+
+#113:126
+   static class StaticRemove extends Ticket {
+
+      private final DataUpdateTickets tickets;
+
+      StaticRemove(DataUpdateTickets tickets, Entity relatedEntity, boolean urgent) {
+         super(urgent ? TicketType.STATIC_REMOVE_URGENT : TicketType.STATIC_REMOVE, relatedEntity);
+         this.tickets = tickets;
+      }
+
+      protected boolean carryOut() {
+         if (this.relatedEntity.getBlueprint().isLoaded()) {
+            this.tickets.updateManager.getStaticBatch(this.relatedEntity.getBatchId()).removeEntity(this.relatedEntity);
+            return true;
+         } else {
+            return false;
+         }
+      }
+   }
+#patchEnd
+
+#128:146
+   static class StaticSwitch extends Ticket {
+
+      private int newBatchId;
+      private final DataUpdateTickets tickets;
+
+      StaticSwitch(DataUpdateTickets tickets, Entity relatedEntity, int batchId) {
+         super(TicketType.SWITCH_TO_STATIC, relatedEntity);
+         this.newBatchId = batchId;
+         this.tickets = tickets;
+      }
+
+      protected boolean carryOut() {
+         if (this.relatedEntity.getBlueprint().isLoaded()) {
+            this.tickets.updateManager.getDynamicBatch().removeNow(this.relatedEntity);
+            this.tickets.updateManager.getStaticBatch(this.newBatchId).addEntity(this.relatedEntity);
+            this.relatedEntity.setBatchId(this.newBatchId);
+            return true;
+         } else {
+            return false;
+         }
+      }
+   }
+#patchEnd
+
+#148:172
+   static class StaticUpdate extends Ticket {
+
+      private int newBatchId;
+      private final DataUpdateTickets tickets;
+
+      StaticUpdate(DataUpdateTickets tickets, Entity relatedEntity, int newBatchId) {
+         super(TicketType.ENTITY_UPDATE, relatedEntity);
+         this.newBatchId = newBatchId;
+         this.tickets = tickets;
+      }
+
+      protected boolean carryOut() {
+         if (this.relatedEntity.getBlueprint().isLoaded()) {
+            int oldBatchId = this.relatedEntity.getBatchId();
+            if (oldBatchId == this.newBatchId) {
+               this.tickets.updateManager.getStaticBatch(this.newBatchId).updateEntity(this.relatedEntity);
+            } else {
+               this.tickets.updateManager.getStaticBatch(oldBatchId).removeEntity(this.relatedEntity);
+               this.tickets.updateManager.getStaticBatch(this.newBatchId).addEntity(this.relatedEntity);
+               this.relatedEntity.setBatchId(this.newBatchId);
+            }
+
+            return true;
+         } else {
+            return false;
+         }
+      }
+   }
+#patchEnd
+#174:186
+   static class TerrainUpdate extends Ticket {
+
+      private final DataUpdateTickets tickets;
+      private Terrain terrain;
+
+      TerrainUpdate(DataUpdateTickets tickets, Terrain terrain) {
+         super(TicketType.TERRAIN_UPTATE, (Entity)null);
+         this.terrain = terrain;
+         this.tickets = tickets;
+      }
+
+      protected boolean carryOut() {
+         this.terrain.updateVboData();
+         return true;
+      }
+   }
+#patchEnd

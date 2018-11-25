@@ -1,0 +1,4 @@
+#170:171
+            float hoursf = timeInDays * 24.0F;
+            return hoursf < 10.0F ? String.format("%.1f", hoursf) + " " + HRS : (int) hoursf + " " + HRS;
+#patchEnd

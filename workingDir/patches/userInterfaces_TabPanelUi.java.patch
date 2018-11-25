@@ -1,0 +1,16 @@
+#73:86
+    private void addListeners() {
+      for(int i = 0; i < this.tabs.length; ++i) {
+         final int x = i;
+         this.tabs[i].addListener(new ClickListener() {
+            public void eventOccurred(GuiClickEvent event) {
+               if (event.toggleChange) {
+                  TabPanelUi.this.shownContents[x].show(event.isToggleOn());
+               }
+
+            }
+         });
+      }
+
+   }
+#patchEnd

@@ -1,0 +1,64 @@
+#74:79
+    public synchronized void addStaticEntity(Entity entity, int batchId, boolean urgent) {
+        this.ticketQueue.add(new DataUpdateTickets.StaticAdd(tickets, entity, batchId, urgent));
+    }
+#patchEnd
+
+#81:88
+    public synchronized void addDynamicEntity(Entity entity) {
+        if (this.dynamicBatch != null && this.dynamicBatch.attemptToAddWithoutUpdate(entity)) {
+            return;
+        }
+        this.ticketQueue.add(new DataUpdateTickets.DynamicAdd(this.tickets, entity));
+    }
+#patchEnd
+
+#90:95
+    public synchronized void removeStaticEntity(Entity entity, boolean urgent) {
+        this.ticketQueue.add(new DataUpdateTickets.StaticRemove(this.tickets, entity, urgent));
+    }
+#patchEnd
+
+#101:106
+   public synchronized void updateStaticEntity(Entity entity, int newBatchId) {
+      this.ticketQueue.add(new DataUpdateTickets.StaticUpdate(tickets, entity, newBatchId));
+   }
+#patchEnd
+
+#108:114
+    public synchronized void makeDynamic(Entity entity) {
+        entity.setCurrentBatchLocation(false);
+        this.ticketQueue.add(new DataUpdateTickets.DynamicSwitch(this.tickets, entity, entity.getBatchId()));
+    }
+#patchEnd
+
+#116:122
+    public synchronized void makeStatic(Entity entity, int batchId) {
+        entity.setCurrentBatchLocation(true);
+        this.ticketQueue.add(new DataUpdateTickets.StaticSwitch(this.tickets, entity, batchId));
+    }
+#patchEnd
+
+#124:129
+   public synchronized void delete(Blueprint blueprint) {
+      this.ticketQueue.add(new DataUpdateTickets.DynamicDelete(this.tickets, blueprint));
+   }
+#patchEnd
+
+#131:136
+   public synchronized void updateTerrain(Terrain terrain) {
+       this.ticketQueue.add(new DataUpdateTickets.TerrainUpdate(this.tickets, terrain));
+   }
+#patchEnd
+
+#146:151
+    protected void addStaticDefragTicket(int batchId) {
+        this.ticketQueue.add(new DataUpdateTickets.StaticDefrag(this.tickets, batchId));
+    }
+#patchEnd
+
+#153:158
+   protected void addDynamicDefragTicket() {
+      this.ticketQueue.add(new DataUpdateTickets.DynamicDefrag(this.tickets));
+   }
+#patchEnd

@@ -1,0 +1,23 @@
+plugins {
+    java
+}
+
+group = "thinmatrix"
+version = "1.0-SNAPSHOT"
+
+repositories {
+    mavenCentral()
+    maven("http://clojars.org/repo/")
+}
+
+dependencies {
+    compile("com.jcraft:jsch:0.1.54")
+    compile("org.lwjgl.lwjgl:lwjgl:2.9.3")
+    compile("org.jcraft:jorbis:0.0.17")
+    compile(group = "org.lwjgl", name = "lwjgl-util", version = "2.7.1")
+    testCompile("junit", "junit", "4.12")
+}
+
+configure<JavaPluginConvention> {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+}
